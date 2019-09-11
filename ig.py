@@ -1,5 +1,6 @@
 import urllib.request
 import json
+import sys
 
 def getIGJson(payload):
   startIndex = response.find("{\"config\":")
@@ -17,7 +18,7 @@ def getExcerptTitle(title):
     return title[:15]
   return title
 
-link = "https://www.instagram.com/pevpearce/"
+link = "https://www.instagram.com/" + sys.argv[1]
 f = urllib.request.urlopen(link)
 myfile = f.read()
 response = myfile.decode('utf-8')
@@ -25,8 +26,6 @@ response = myfile.decode('utf-8')
 jsonFormat = getIGJson(response)
 
 timelines = jsonFormat["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_owner_to_timeline_media"]["edges"]
-
-count = 0
 
 for node in timelines:
   if node["node"]["__typename"] == 'GraphVideo':
@@ -42,7 +41,7 @@ for node in timelines:
     if len(jsonVideo["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"]) != 0:
       caption = jsonVideo["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"][0]["node"]["text"].encode('utf-8').decode()
     urllib.request.urlretrieve(videoURL, getExcerptTitle(caption) + "-" + postId + ".mp4")
-    print(getExcerptTitle(caption) + "-" + postId + "=> downloaded 🎉")
+    print(getExcerptTitle(caption) + "-" + postId + " => downloaded 🎉")
 
   elif node["node"]["__typename"] == 'GraphSidecar':
     linkId = node["node"]["shortcode"]
@@ -64,7 +63,7 @@ for node in timelines:
       slideURL = slideNode["node"]["display_resources"][2]["src"].encode('utf-8').decode()
       urllib.request.urlretrieve(slideURL, getExcerptTitle(slideCaption) + "-" + str(count) + slidesId + ".jpg")
       count += 1
-      print(getExcerptTitle(slideCaption) + "-" + slidesId + "=> downloaded 🎉")
+      print(getExcerptTitle(slideCaption) + "-" + slidesId + " => downloaded 🎉")
     
   else:
     postId = node["node"]["id"]
@@ -74,5 +73,8 @@ for node in timelines:
     
     imageURL = node["node"]["thumbnail_resources"][4]["src"].encode('utf-8').decode()
     urllib.request.urlretrieve(imageURL, getExcerptTitle(filename) + "-" + postId + ".jpg")
-    print(getExcerptTitle(filename) + "-" + postId + "=> downloaded 🎉")
+    print(getExcerptTitle(filename) + "-" + postId + " => downloaded 🎉")
 
+# TODO:
+# FETCH DATA AFTER FIRST 12 POST USING THIS ENDPOINT
+# https://www.instagram.com/graphql/query/?query_hash=58b6785bea111c67129decbe6a448951&variables={"id":"4310360","first":12,"after":"QVFCRnBwSXZyOWRiaFlMZkdUYWxoTUJWWnZPNEFTX1hoYTVrc21BS3ZITGxCSDRoVW12a2ZhcWJJa3NaQmNmZmxsUU9NSngzcWYtekxLMHVmaWRVWTN3Yw=="}
