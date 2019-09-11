@@ -6,10 +6,10 @@ This pakcage is using web scraping, **NOT USING IG API**
 
 ### How to run
 
-You only need a **public IG profile** in order to work. Clone or download this package, open your terminal and run this command:
+You only need a **public IG username** in order to work. Clone or download this package, open your terminal and run this command:
 
 ```
-python3 ig.py *your_open_ig_profile*
+python3 ig.py *username*
 ```
 
 ### TODO
