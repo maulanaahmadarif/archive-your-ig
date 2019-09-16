@@ -12,7 +12,4 @@ You only need a **public IG username** in order to work. Clone or download this 
 python3 ig.py *username*
 ```
 
-### TODO
-This package still only fetch the first 12 post, next feature will download all the post image, assets, and video and also slider post
-
 **NOTE: this package is using python3**
