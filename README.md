@@ -1,6 +1,6 @@
 # IG Archive
 
-IG Archive is a package that has ability to download all your post images, videos and also slides images post in no time!
+IG Archive is a package that has ability to download all your post images, videos and even slides images post!
 
 This pakcage is using web scraping, **NOT USING IG API**
 
