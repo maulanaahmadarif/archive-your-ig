@@ -18,7 +18,27 @@ def getExcerptTitle(title):
     return title[:15]
   return title
 
+def getPercentageFetchedPost(fetchedPost, totalPost):
+  return (fetchedPost / totalPost) * 100
+
+fetchedPost = 0
+
+link = "https://www.instagram.com/" + sys.argv[1]
+f = urllib.request.urlopen(link)
+myfile = f.read()
+response = myfile.decode('utf-8')
+
+jsonFormat = getIGJson(response)
+
+profileId = jsonFormat["entry_data"]["ProfilePage"][0]["graphql"]["user"]["id"]
+totalPost = jsonFormat["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_owner_to_timeline_media"]["count"]
+
+timelines = jsonFormat["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_owner_to_timeline_media"]["edges"]
+afterHash = ''
+
 def fetchTimeline(timeline):
+  global fetchedPost
+  global totalPost
   for node in timeline:
     if node["node"]["__typename"] == 'GraphVideo':
       linkId = node["node"]["shortcode"]
@@ -67,27 +87,9 @@ def fetchTimeline(timeline):
       urllib.request.urlretrieve(imageURL, getExcerptTitle(filename) + "-" + postId + ".jpg")
       print(getExcerptTitle(filename) + "-" + postId + " => downloaded 🎉")
 
-link = "https://www.instagram.com/" + sys.argv[1]
-f = urllib.request.urlopen(link)
-myfile = f.read()
-response = myfile.decode('utf-8')
-
-jsonFormat = getIGJson(response)
-
-profileId = jsonFormat["entry_data"]["ProfilePage"][0]["graphql"]["user"]["id"]
-totalPost = jsonFormat["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_owner_to_timeline_media"]["count"]
-
-timelines = jsonFormat["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_owner_to_timeline_media"]["edges"]
-
-fetchTimeline(timelines)
-
-# TODO:
-# FETCH DATA AFTER FIRST 50 POST USING THIS ENDPOINT
-# https://www.instagram.com/graphql/query/?query_hash=58b6785bea111c67129decbe6a448951&variables={"id":"4310360","first":12,"after":"QVFCRnBwSXZyOWRiaFlMZkdUYWxoTUJWWnZPNEFTX1hoYTVrc21BS3ZITGxCSDRoVW12a2ZhcWJJa3NaQmNmZmxsUU9NSngzcWYtekxLMHVmaWRVWTN3Yw=="}
-
-
-afterHash = ''
-fetchedPost = 12
+    fetchedPost = fetchedPost + 1
+    downloadedPercentage = getPercentageFetchedPost(fetchedPost, totalPost)
+    print('\n' + str(downloadedPercentage) + "%\n", end="\r")
 
 while totalPost > fetchedPost:
   ajaxLink = 'https://www.instagram.com/graphql/query/?query_hash=58b6785bea111c67129decbe6a448951&variables={"id":"' + profileId + '","first":50,"after":"'+ afterHash + '"}'
@@ -104,3 +106,11 @@ while totalPost > fetchedPost:
   afterHash = nextJsonFormat["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]["end_cursor"]
   fetchedPost = fetchedPost + 50
 
+# TODO
+# Make it unbreak if the connection is poor (Error with server connection, reset peer connection)
+# Make it folder
+# Count the percentage total download
+# Make batch download
+
+# NEXT FEATURE
+# DOWNLOAD IG STORY
