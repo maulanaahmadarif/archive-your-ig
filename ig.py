@@ -1,6 +1,9 @@
 import urllib.request
 import json
 import sys
+import os
+import shutil
+from decimal import Decimal
 
 def getIGJson(payload):
   startIndex = payload.find("{\"config\":")
@@ -20,6 +23,19 @@ def getExcerptTitle(title):
 
 def getPercentageFetchedPost(fetchedPost, totalPost):
   return (fetchedPost / totalPost) * 100
+
+
+dir_photos = "./photos/"
+dir_videos = "./videos/"
+dir_slide_photos = "./slide-photos/"
+if os.path.exists(dir_photos) and os.path.exists(dir_videos) and os.path.exists(dir_slide_photos):
+    shutil.rmtree(dir_photos)
+    shutil.rmtree(dir_videos)
+    shutil.rmtree(dir_slide_photos)
+
+os.mkdir('photos')
+os.mkdir('videos')
+os.mkdir('slide-photos')
 
 fetchedPost = 0
 
@@ -52,7 +68,7 @@ def fetchTimeline(timeline):
       caption = ""
       if len(jsonVideo["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"]) != 0:
         caption = jsonVideo["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"][0]["node"]["text"].encode('utf-8').decode()
-      urllib.request.urlretrieve(videoURL, getExcerptTitle(caption) + "-" + postId + ".mp4")
+      urllib.request.urlretrieve(videoURL, os.path.join('./videos/', getExcerptTitle(caption) + "-" + postId + ".mp4"))
       print(getExcerptTitle(caption) + "-" + postId + " => downloaded 🎉")
 
     elif node["node"]["__typename"] == 'GraphSidecar':
@@ -73,7 +89,7 @@ def fetchTimeline(timeline):
       count = 1
       for slideNode in slides:
         slideURL = slideNode["node"]["display_resources"][2]["src"].encode('utf-8').decode()
-        urllib.request.urlretrieve(slideURL, getExcerptTitle(slideCaption) + "-" + str(count) + slidesId + ".jpg")
+        urllib.request.urlretrieve(slideURL, os.path.join('./slide-photos/', getExcerptTitle(slideCaption) + "-" + str(count) + slidesId + ".jpg"))
         count += 1
         print(getExcerptTitle(slideCaption) + "-" + slidesId + " => downloaded 🎉")
       
@@ -84,11 +100,12 @@ def fetchTimeline(timeline):
         filename = node["node"]["edge_media_to_caption"]["edges"][0]["node"]["text"].encode('utf-8').decode()
       
       imageURL = node["node"]["thumbnail_resources"][4]["src"].encode('utf-8').decode()
-      urllib.request.urlretrieve(imageURL, getExcerptTitle(filename) + "-" + postId + ".jpg")
+      urllib.request.urlretrieve(imageURL, os.path.join('./photos/', getExcerptTitle(filename) + "-" + postId + ".jpg"))
       print(getExcerptTitle(filename) + "-" + postId + " => downloaded 🎉")
 
     fetchedPost = fetchedPost + 1
-    downloadedPercentage = getPercentageFetchedPost(fetchedPost, totalPost)
+    downloadedPercentage = Decimal(getPercentageFetchedPost(fetchedPost, totalPost))
+    downloadedPercentage = round(downloadedPercentage, 2)
     print('\n' + str(downloadedPercentage) + "%\n", end="\r")
 
 while totalPost > fetchedPost:
@@ -108,8 +125,8 @@ while totalPost > fetchedPost:
 
 # TODO
 # Make it unbreak if the connection is poor (Error with server connection, reset peer connection)
-# Make it folder
-# Count the percentage total download
+# Make it folder (Done !)
+# Count the percentage total download (Done !)
 # Make batch download
 
 # NEXT FEATURE
