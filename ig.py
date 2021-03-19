@@ -25,22 +25,26 @@ def getPercentageFetchedPost(fetchedPost, totalPost):
   return (fetchedPost / totalPost) * 100
 
 
-dir_photos = "./photos/"
-dir_videos = "./videos/"
-dir_slide_photos = "./slide-photos/"
+dir_photos = "./photos/" + sys.argv[1] + "/"
+dir_videos = "./videos/" + sys.argv[1] + "/"
+dir_slide_photos = "./slide-photos/" + sys.argv[1] + "/"
 if os.path.exists(dir_photos) and os.path.exists(dir_videos) and os.path.exists(dir_slide_photos):
-    shutil.rmtree(dir_photos)
-    shutil.rmtree(dir_videos)
-    shutil.rmtree(dir_slide_photos)
+  shutil.rmtree(dir_photos)
+  shutil.rmtree(dir_videos)
+  shutil.rmtree(dir_slide_photos)
 
-os.mkdir('photos')
-os.mkdir('videos')
-os.mkdir('slide-photos')
+os.mkdir('photos/' + sys.argv[1] + '/')
+os.mkdir('videos/' + sys.argv[1] + '/')
+os.mkdir('slide-photos/' + sys.argv[1] + '/')
 
 fetchedPost = 0
 
 link = "https://www.instagram.com/" + sys.argv[1]
-f = urllib.request.urlopen(link)
+
+req = urllib.request.Request(link)
+req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36')
+f = urllib.request.urlopen(req)
+
 myfile = f.read()
 response = myfile.decode('utf-8')
 
@@ -59,7 +63,11 @@ def fetchTimeline(timeline):
     if node["node"]["__typename"] == 'GraphVideo':
       linkId = node["node"]["shortcode"]
       videoLink = "https://www.instagram.com/p/" + linkId
-      videoReader = urllib.request.urlopen(videoLink)
+      
+      req = urllib.request.Request(videoLink)
+      req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36')
+
+      videoReader = urllib.request.urlopen(req)
       videoFile = videoReader.read()
       responseVideo = videoFile.decode('utf-8')
       jsonVideo = getIGJson(responseVideo)
@@ -68,13 +76,19 @@ def fetchTimeline(timeline):
       caption = ""
       if len(jsonVideo["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"]) != 0:
         caption = jsonVideo["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"][0]["node"]["text"].encode('utf-8').decode()
-      urllib.request.urlretrieve(videoURL, os.path.join('./videos/', getExcerptTitle(caption) + "-" + postId + ".mp4"))
-      print(getExcerptTitle(caption) + "-" + postId + " => downloaded 🎉")
+      # urllib.request.urlretrieve(videoURL, os.path.join(dir_videos, getExcerptTitle(caption) + "-" + postId + ".mp4"))
+      # print(getExcerptTitle(caption) + "-" + postId + " => downloaded 🎉")
+      urllib.request.urlretrieve(videoURL, os.path.join(dir_videos, postId + ".mp4"))
+      print(postId + " => downloaded 🎉")
 
     elif node["node"]["__typename"] == 'GraphSidecar':
       linkId = node["node"]["shortcode"]
       slidesLink = "https://www.instagram.com/p/" + linkId
-      f = urllib.request.urlopen(slidesLink)
+
+      req = urllib.request.Request(slidesLink)
+      req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36')
+
+      f = urllib.request.urlopen(req)
       myfile = f.read()
       response = myfile.decode('utf-8')
       jsonSlide = getIGJson(response)
@@ -89,9 +103,11 @@ def fetchTimeline(timeline):
       count = 1
       for slideNode in slides:
         slideURL = slideNode["node"]["display_resources"][2]["src"].encode('utf-8').decode()
-        urllib.request.urlretrieve(slideURL, os.path.join('./slide-photos/', getExcerptTitle(slideCaption) + "-" + str(count) + slidesId + ".jpg"))
-        count += 1
-        print(getExcerptTitle(slideCaption) + "-" + slidesId + " => downloaded 🎉")
+        # urllib.request.urlretrieve(slideURL, os.path.join(dir_slide_photos, getExcerptTitle(slideCaption) + "-" + str(count) + slidesId + ".jpg"))
+        # count += 1
+        # print(getExcerptTitle(slideCaption) + "-" + slidesId + " => downloaded 🎉")
+        urllib.request.urlretrieve(slideURL, os.path.join(dir_slide_photos, slidesId + ".jpg"))
+        print(slidesId + " => downloaded 🎉")
       
     else:
       postId = node["node"]["id"]
@@ -100,8 +116,10 @@ def fetchTimeline(timeline):
         filename = node["node"]["edge_media_to_caption"]["edges"][0]["node"]["text"].encode('utf-8').decode()
       
       imageURL = node["node"]["thumbnail_resources"][4]["src"].encode('utf-8').decode()
-      urllib.request.urlretrieve(imageURL, os.path.join('./photos/', getExcerptTitle(filename) + "-" + postId + ".jpg"))
-      print(getExcerptTitle(filename) + "-" + postId + " => downloaded 🎉")
+      # urllib.request.urlretrieve(imageURL, os.path.join(dir_photos, getExcerptTitle(filename) + "-" + postId + ".jpg"))
+      # print(getExcerptTitle(filename) + "-" + postId + " => downloaded 🎉")
+      urllib.request.urlretrieve(imageURL, os.path.join(dir_photos, postId + ".jpg"))
+      print(postId + " => downloaded 🎉")
 
     fetchedPost = fetchedPost + 1
     downloadedPercentage = Decimal(getPercentageFetchedPost(fetchedPost, totalPost))
@@ -109,8 +127,12 @@ def fetchTimeline(timeline):
     print('\n' + str(downloadedPercentage) + "%\n", end="\r")
 
 while totalPost > fetchedPost:
-  ajaxLink = 'https://www.instagram.com/graphql/query/?query_hash=58b6785bea111c67129decbe6a448951&variables={"id":"' + profileId + '","first":50,"after":"'+ afterHash + '"}'
-  fileReader = urllib.request.urlopen(ajaxLink)
+  ajaxLink = 'https://www.instagram.com/graphql/query/?query_hash=' + sys.argv[2] + '&variables={"id":"' + profileId + '","first":50,"after":"'+ afterHash + '"}'
+  
+  req = urllib.request.Request(ajaxLink)
+  req.add_header('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36')
+
+  fileReader = urllib.request.urlopen(req)
   responseJson = fileReader.read()
   responseJsonDecode = responseJson.decode('utf-8')
 
@@ -124,10 +146,7 @@ while totalPost > fetchedPost:
   fetchedPost = fetchedPost + 50
 
 # TODO
-# Make it unbreak if the connection is poor (Error with server connection, reset peer connection)
-# Make it folder (Done !)
-# Count the percentage total download (Done !)
-# Make batch download
+# Fix crash if the connection is poor (Error with server connection, reset peer connection)
 
 # NEXT FEATURE
 # DOWNLOAD IG STORY
