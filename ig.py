@@ -25,17 +25,18 @@ def getPercentageFetchedPost(fetchedPost, totalPost):
   return (fetchedPost / totalPost) * 100
 
 
-dir_photos = "./photos/" + sys.argv[1] + "/"
-dir_videos = "./videos/" + sys.argv[1] + "/"
-dir_slide_photos = "./slide-photos/" + sys.argv[1] + "/"
-if os.path.exists(dir_photos) and os.path.exists(dir_videos) and os.path.exists(dir_slide_photos):
-  shutil.rmtree(dir_photos)
-  shutil.rmtree(dir_videos)
-  shutil.rmtree(dir_slide_photos)
+dir_photos = "./" + sys.argv[1] + "/photos/"
+dir_videos = "./" + sys.argv[1] + "/videos/"
+dir_slide_photos = "./" + sys.argv[1] + "/slide-photos/"
 
-os.mkdir('photos/' + sys.argv[1] + '/')
-os.mkdir('videos/' + sys.argv[1] + '/')
-os.mkdir('slide-photos/' + sys.argv[1] + '/')
+if not os.path.exists(dir_photos):
+    os.makedirs(dir_photos)
+
+if not os.path.exists(dir_videos):
+    os.makedirs(dir_videos)
+
+if not os.path.exists(dir_slide_photos):
+    os.makedirs(dir_slide_photos)
 
 fetchedPost = 0
 
